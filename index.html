@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Convert test automation code between CodeceptJS and Pytest with AI-powered intelligence">
+  <meta name="keywords" content="codeceptjs, pytest, code converter, test automation">
+  <meta name="author" content="Joseph Nguyen">
+  
+  <title>Code Converter | CodeceptJS ↔ Pytest</title>
+  
+  <link rel="icon" type="image/svg+xml" href="/code-converter/favicon.svg">
+  <script type="module" crossorigin src="/code-converter/assets/index-DXPlVY6e.js"></script>
+  <link rel="modulepreload" crossorigin href="/code-converter/assets/monaco-B2601pel.js">
+  <link rel="stylesheet" crossorigin href="/code-converter/assets/monaco-18dVF5eG.css">
+  <link rel="stylesheet" crossorigin href="/code-converter/assets/index-h4mJsPG9.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>
+        <span class="gradient-text">Code Converter</span>
+      </h1>
+      <p class="subtitle">AI-powered conversion between CodeceptJS &amp; Pytest</p>
+      <div class="badge">✨ Powered by Gemini AI</div>
+    </header>
+
+    <!-- API Key Banner -->
+    <div id="apiKeyBanner" class="api-key-banner warning hidden">
+      <div>
+        <strong>⚠️ API Key Required</strong>
+        <p style="margin: 0; color: var(--text-secondary); font-size: var(--font-size-sm);">
+          Configure your Gemini API key to start converting code
+        </p>
+      </div>
+      <button class="btn btn-primary" onclick="app.openApiKeyModal()">
+        Configure API Key
+      </button>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="direction-toggle">
+        <button id="codeceptjsToPytestBtn" class="toggle-btn active" onclick="app.setDirection('codeceptjs-to-pytest')">
+          <span>📝</span>
+          CodeceptJS → Pytest
+        </button>
+        
+        <div class="swap-icon">⇄</div>
+        
+        <button id="pytestToCodeceptjsBtn" class="toggle-btn" onclick="app.setDirection('pytest-to-codeceptjs')">
+          <span>🐍</span>
+          Pytest → CodeceptJS
+        </button>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-glass" onclick="app.openApiKeyModal()">
+          🔑 API Key
+        </button>
+        <button id="convertBtn" class="btn btn-primary" onclick="app.convert()">
+          <span id="convertBtnText">✨ Convert Code</span>
+          <div id="convertBtnSpinner" class="spinner hidden"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Editors -->
+    <div class="editors-container">
+      <!-- Input Editor -->
+      <div class="editor-wrapper">
+        <div class="editor-header">
+          <h3>
+            <span id="inputLabel">Input (CodeceptJS)</span>
+            <span id="inputLang" class="editor-lang">JavaScript</span>
+          </h3>
+          <div class="editor-actions">
+            <button class="icon-btn" onclick="app.clearInput()" title="Clear">🗑️ Clear</button>
+            <button class="icon-btn" onclick="app.pasteFromClipboard()" title="Paste">📋 Paste</button>
+          </div>
+        </div>
+        <div id="inputEditor" class="editor-container"></div>
+      </div>
+
+      <!-- Output Editor -->
+      <div class="editor-wrapper">
+        <div class="editor-header">
+          <h3>
+            <span id="outputLabel">Output (Pytest)</span>
+            <span id="outputLang" class="editor-lang">Python</span>
+          </h3>
+          <div class="editor-actions">
+            <button class="icon-btn" onclick="app.copyOutput()" title="Copy">📋 Copy</button>
+            <button class="icon-btn" onclick="app.downloadOutput()" title="Download">💾 Download</button>
+          </div>
+        </div>
+        <div id="outputEditor" class="editor-container"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        Built with ❤️ for internal use | 
+        <a href="https://github.com" target="_blank" rel="noopener">View on GitHub</a>
+      </p>
+    </footer>
+  </div>
+
+  <!-- API Key Modal -->
+  <div id="apiKeyModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h2>🔑 Configure API Key</h2>
+      <p>Enter your Gemini API key to enable AI-powered code conversion.</p>
+      
+      <div class="info-box">
+        <strong>How to get an API key:</strong><br>
+        1. Visit <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a><br>
+        2. Create a new API key (free tier available)<br>
+        3. Copy and paste it below
+      </div>
+
+      <div id="apiKeyError" class="error-message hidden"></div>
+      <div id="apiKeySuccess" class="success-message hidden"></div>
+
+      <input 
+        type="password" 
+        id="apiKeyInput" 
+        placeholder="Enter your Gemini API key (AIza...)"
+        autocomplete="off"
+      >
+
+      <div class="modal-actions">
+        <button class="btn btn-glass" onclick="app.closeApiKeyModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="app.saveApiKey()">
+          Save & Test
+        </button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
