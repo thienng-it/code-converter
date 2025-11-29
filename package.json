@@ -1,0 +1,29 @@
+{
+  "name": "code-converter",
+  "version": "1.0.0",
+  "description": "Modern web application for converting test automation code between CodeceptJS and Pytest frameworks",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
+  },
+  "keywords": [
+    "codeceptjs",
+    "pytest",
+    "code-converter",
+    "test-automation",
+    "converter"
+  ],
+  "author": "Joseph Nguyen",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "gh-pages": "^6.1.0"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.45.0",
+    "@google/generative-ai": "^0.1.3"
+  }
+}
