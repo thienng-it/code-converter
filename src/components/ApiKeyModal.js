@@ -4,7 +4,6 @@
  */
 
 const API_KEY_STORAGE_KEY = 'gemini_api_key';
-const DEFAULT_API_KEY = 'AIzaSyCJ6YDQGCi3do3JVWh2B1Cy13wxKFyH8O0';
 
 export class ApiKeyModal {
     constructor() {
@@ -82,7 +81,7 @@ export class ApiKeyModal {
      * Get API key from localStorage
      */
     getApiKey() {
-        return localStorage.getItem(API_KEY_STORAGE_KEY) || DEFAULT_API_KEY;
+        return localStorage.getItem(API_KEY_STORAGE_KEY) || import.meta.env.VITE_GEMINI_API_KEY;
     }
 
     /**
