@@ -81,6 +81,9 @@ class CodeConverterApp {
             // Initialize API Key Modal
             this.apiKeyModal.init();
 
+            // Hide API key button if embedded key is available
+            this.hideApiKeyUIIfEmbedded();
+
             // Initialize Monaco Editors
             this.initEditors();
 
@@ -94,6 +97,25 @@ class CodeConverterApp {
         } catch (error) {
             console.error('Error initializing app:', error);
             alert('Error initializing application. Please refresh the page.');
+        }
+    }
+
+    /**
+     * Hide API key UI elements if embedded key is available
+     */
+    hideApiKeyUIIfEmbedded() {
+        if (this.apiKeyModal.hasEmbeddedApiKey()) {
+            // Hide the API Key button in the controls
+            const apiKeyBtn = document.querySelector('.btn-glass[onclick="app.openApiKeyModal()"]');
+            if (apiKeyBtn) {
+                apiKeyBtn.style.display = 'none';
+            }
+            // Ensure banner is hidden
+            const banner = document.getElementById('apiKeyBanner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+            console.log('🔑 Using embedded API key');
         }
     }
 
@@ -216,8 +238,13 @@ class CodeConverterApp {
 
         // Check if API key is configured
         if (!apiKey) {
-            alert('Please configure your Gemini API key first');
-            this.openApiKeyModal();
+            // Only show modal if there's no embedded key
+            if (!this.apiKeyModal.hasEmbeddedApiKey()) {
+                alert('Please configure your Gemini API key first');
+                this.openApiKeyModal();
+            } else {
+                alert('API key configuration error. Please contact the administrator.');
+            }
             return;
         }
 

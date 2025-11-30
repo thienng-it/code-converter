@@ -108,10 +108,23 @@ export class ApiKeyModal {
     }
 
     /**
-     * Get API key from localStorage
+     * Get API key - prioritize environment variable (embedded), then localStorage
      */
     getApiKey() {
-        return localStorage.getItem(API_KEY_STORAGE_KEY) || import.meta.env.VITE_GEMINI_API_KEY;
+        // Prioritize embedded API key from environment variable
+        const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (envKey && envKey.length > 0 && envKey !== 'YOUR_API_KEY_HERE') {
+            return envKey;
+        }
+        return localStorage.getItem(API_KEY_STORAGE_KEY);
+    }
+
+    /**
+     * Check if using embedded API key
+     */
+    hasEmbeddedApiKey() {
+        const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+        return envKey && envKey.length > 0 && envKey !== 'YOUR_API_KEY_HERE';
     }
 
     /**
@@ -160,7 +173,8 @@ export class ApiKeyModal {
      * Update banner visibility
      */
     updateBanner() {
-        if (this.hasApiKey()) {
+        // Always hide banner if we have an embedded API key or any valid key
+        if (this.hasApiKey() || this.hasEmbeddedApiKey()) {
             this.banner.classList.add('hidden');
         } else {
             this.banner.classList.remove('hidden');
