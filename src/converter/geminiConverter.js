@@ -6,7 +6,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { buildConversionPrompt } from './promptTemplates.js';
 
-const MODEL_NAME = 'gemini-1.5-flash';
+const MODEL_NAME = 'gemini-1.5-flash-latest';
+const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro-latest', 'gemini-1.5-pro', 'gemini-pro'];
 
 /**
  * Initialize Gemini AI client
@@ -61,24 +62,40 @@ export async function convertCode(code, direction, apiKey) {
 
         // Initialize Gemini
         const genAI = initializeGemini(apiKey);
-        const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-
+        
         // Build prompt
         const prompt = buildConversionPrompt(code, direction);
 
-        // Generate conversion
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const convertedCode = response.text();
+        // Try primary model first, then fallbacks
+        const modelsToTry = [MODEL_NAME, ...FALLBACK_MODELS];
+        let lastError = null;
 
-        // Extract code from response (remove markdown if present)
-        const cleanCode = extractCodeFromResponse(convertedCode);
+        for (const modelName of modelsToTry) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                
+                // Generate conversion
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const convertedCode = response.text();
 
-        if (!cleanCode) {
-            throw new Error('Conversion failed: empty response from AI');
+                // Extract code from response (remove markdown if present)
+                const cleanCode = extractCodeFromResponse(convertedCode);
+
+                if (!cleanCode) {
+                    throw new Error('Conversion failed: empty response from AI');
+                }
+
+                return cleanCode;
+            } catch (error) {
+                console.warn(`Model ${modelName} failed:`, error.message);
+                lastError = error;
+                // Try next model
+            }
         }
 
-        return cleanCode;
+        // If all models failed, throw error
+        throw lastError || new Error('All models failed');
 
     } catch (error) {
         // Enhanced error handling
@@ -111,36 +128,55 @@ export function validateApiKey(apiKey) {
 
 /**
  * Test API key by making a simple request
+ * Try multiple models to ensure compatibility
  */
 export async function testApiKey(apiKey) {
-    try {
-        // Clean the API key before testing
-        const cleanKey = apiKey
-            .replace(/\s/g, '') // Remove all whitespace
-            .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
-            .trim();
-        
-        const genAI = initializeGemini(cleanKey);
-        const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+    // Clean the API key before testing
+    const cleanKey = apiKey
+        .replace(/\s/g, '') // Remove all whitespace
+        .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
+        .trim();
+    
+    const genAI = initializeGemini(cleanKey);
+    
+    // Try multiple models in order of preference
+    const modelsToTry = [
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro-latest',
+        'gemini-1.5-pro',
+        'gemini-pro'
+    ];
+    
+    let lastError = null;
+    
+    for (const modelName of modelsToTry) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            
+            // Simple test prompt with timeout
+            const result = await Promise.race([
+                model.generateContent('Say "OK"'),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Request timeout')), 15000)
+                )
+            ]);
+            
+            const response = await result.response;
+            const text = response.text();
 
-        // Simple test prompt with timeout
-        const result = await Promise.race([
-            model.generateContent('Say "OK"'),
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Request timeout')), 10000)
-            )
-        ]);
-        
-        const response = await result.response;
-        const text = response.text();
-
-        return text && text.length > 0;
-    } catch (error) {
-        console.error('API key test failed:', error);
-        // Provide more detailed error information
-        if (error.message) {
-            throw new Error(error.message);
+            if (text && text.length > 0) {
+                console.log(`Successfully validated API key with model: ${modelName}`);
+                return true; // Success!
+            }
+        } catch (error) {
+            console.warn(`Model ${modelName} failed:`, error.message);
+            lastError = error;
+            // Continue to next model
         }
-        throw error;
     }
+    
+    // If all models failed, throw the last error
+    console.error('All models failed. Last error:', lastError);
+    throw new Error(lastError?.message || 'Unable to validate API key with any available model');
 }
