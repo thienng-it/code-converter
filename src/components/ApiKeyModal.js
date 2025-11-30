@@ -83,16 +83,23 @@ export class ApiKeyModal {
             }
         } catch (error) {
             console.error('API key validation error:', error);
-            let errorMessage = 'Error testing API key: ';
+            const errMsg = error.message || String(error);
+            let errorMessage = '';
             
-            if (error.message.includes('API_KEY_INVALID') || error.message.includes('Invalid')) {
-                errorMessage += 'The API key is invalid. Please verify you copied the entire key from Google AI Studio.';
-            } else if (error.message.includes('403') || error.message.includes('permission')) {
-                errorMessage += 'Access denied. Make sure the API key has the correct permissions.';
-            } else if (error.message.includes('404')) {
-                errorMessage += 'API endpoint not found. The key might be for a different service.';
+            // Check for specific API errors in the message
+            if (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID')) {
+                errorMessage = 'Invalid API key. Please verify you copied the entire key from Google AI Studio.';
+            } else if (errMsg.includes('PERMISSION_DENIED') || errMsg.includes('403')) {
+                errorMessage = 'Permission denied. The API key may not have access to the Gemini API.';
+            } else if (errMsg.includes('QUOTA_EXCEEDED') || errMsg.includes('429')) {
+                errorMessage = 'API quota exceeded. Please try again later.';
+            } else if (errMsg.includes('fetch') || errMsg.includes('network') || errMsg.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection and try again.';
+            } else if (errMsg.includes('timeout')) {
+                errorMessage = 'Request timed out. Please try again.';
             } else {
-                errorMessage += error.message;
+                // Show the actual error for debugging
+                errorMessage = errMsg.length > 150 ? errMsg.substring(0, 150) + '...' : errMsg;
             }
             
             this.showError(errorMessage);

@@ -6,8 +6,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { buildConversionPrompt } from './promptTemplates.js';
 
-const MODEL_NAME = 'gemini-1.5-flash-latest';
-const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro-latest', 'gemini-1.5-pro', 'gemini-pro'];
+const MODEL_NAME = 'gemini-2.0-flash';
+const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
 
 /**
  * Initialize Gemini AI client
@@ -141,17 +141,18 @@ export async function testApiKey(apiKey) {
     
     // Try multiple models in order of preference
     const modelsToTry = [
-        'gemini-1.5-flash-latest',
+        'gemini-2.0-flash',
         'gemini-1.5-flash',
-        'gemini-1.5-pro-latest',
         'gemini-1.5-pro',
         'gemini-pro'
     ];
     
     let lastError = null;
+    let isApiKeyError = false;
     
     for (const modelName of modelsToTry) {
         try {
+            console.log(`Testing API key with model: ${modelName}`);
             const model = genAI.getGenerativeModel({ model: modelName });
             
             // Simple test prompt with timeout
@@ -170,13 +171,21 @@ export async function testApiKey(apiKey) {
                 return true; // Success!
             }
         } catch (error) {
-            console.warn(`Model ${modelName} failed:`, error.message);
+            const errMsg = error.message || String(error);
+            console.warn(`Model ${modelName} failed:`, errMsg);
             lastError = error;
-            // Continue to next model
+            
+            // If this is an API key error, no point trying other models
+            if (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID')) {
+                isApiKeyError = true;
+                break;
+            }
+            // Continue to next model for other errors
         }
     }
     
-    // If all models failed, throw the last error
-    console.error('All models failed. Last error:', lastError);
-    throw new Error(lastError?.message || 'Unable to validate API key with any available model');
+    // If all models failed, throw with the actual error message
+    const errMsg = lastError?.message || 'Unable to validate API key';
+    console.error('API key validation failed:', errMsg);
+    throw new Error(errMsg);
 }
