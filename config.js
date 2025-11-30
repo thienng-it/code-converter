@@ -1,1 +1,5 @@
-window.APP_CONFIG = { GEMINI_API_KEY: "AIzaSyBV50LRJxJrYbdASb1qJzWObo6hLO1gmTk" };
+// Runtime configuration
+// Users will need to enter their own API key via the UI
+window.APP_CONFIG = {
+  GEMINI_API_KEY: ''
+};
