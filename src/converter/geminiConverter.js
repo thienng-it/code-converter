@@ -114,15 +114,33 @@ export function validateApiKey(apiKey) {
  */
 export async function testApiKey(apiKey) {
     try {
-        const genAI = initializeGemini(apiKey);
+        // Clean the API key before testing
+        const cleanKey = apiKey
+            .replace(/\s/g, '') // Remove all whitespace
+            .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
+            .trim();
+        
+        const genAI = initializeGemini(cleanKey);
         const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-        // Simple test prompt
-        const result = await model.generateContent('Say "OK"');
+        // Simple test prompt with timeout
+        const result = await Promise.race([
+            model.generateContent('Say "OK"'),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timeout')), 10000)
+            )
+        ]);
+        
         const response = await result.response;
+        const text = response.text();
 
-        return response.text().length > 0;
+        return text && text.length > 0;
     } catch (error) {
-        return false;
+        console.error('API key test failed:', error);
+        // Provide more detailed error information
+        if (error.message) {
+            throw new Error(error.message);
+        }
+        throw error;
     }
 }

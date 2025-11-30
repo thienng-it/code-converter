@@ -36,16 +36,26 @@ export class ApiKeyModal {
      * Save API key to localStorage
      */
     async save() {
-        const apiKey = this.input.value.trim();
+        // Aggressively clean the API key - remove ALL whitespace including invisible characters
+        const apiKey = this.input.value
+            .replace(/\s/g, '') // Remove all whitespace
+            .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
+            .trim();
 
         if (!apiKey) {
             this.showError('Please enter an API key');
             return false;
         }
 
-        // Basic validation
+        // Basic validation - Gemini keys typically start with 'AIza' and are 39 chars
         if (apiKey.length < 20) {
             this.showError('API key appears to be invalid (too short)');
+            return false;
+        }
+
+        // Check if it looks like a Gemini API key
+        if (!apiKey.startsWith('AIza')) {
+            this.showError('API key should start with "AIza". Please check your key.');
             return false;
         }
 
@@ -72,7 +82,20 @@ export class ApiKeyModal {
                 return false;
             }
         } catch (error) {
-            this.showError(`Error testing API key: ${error.message}`);
+            console.error('API key validation error:', error);
+            let errorMessage = 'Error testing API key: ';
+            
+            if (error.message.includes('API_KEY_INVALID') || error.message.includes('Invalid')) {
+                errorMessage += 'The API key is invalid. Please verify you copied the entire key from Google AI Studio.';
+            } else if (error.message.includes('403') || error.message.includes('permission')) {
+                errorMessage += 'Access denied. Make sure the API key has the correct permissions.';
+            } else if (error.message.includes('404')) {
+                errorMessage += 'API endpoint not found. The key might be for a different service.';
+            } else {
+                errorMessage += error.message;
+            }
+            
+            this.showError(errorMessage);
             return false;
         }
     }
