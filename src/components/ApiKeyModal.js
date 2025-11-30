@@ -108,23 +108,22 @@ export class ApiKeyModal {
     }
 
     /**
-     * Get API key - prioritize environment variable (embedded), then localStorage
+     * Get API key - prioritize runtime config, then localStorage
      */
     getApiKey() {
-        // Prioritize embedded API key from environment variable
-        const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (envKey && envKey.length > 0 && envKey !== 'YOUR_API_KEY_HERE') {
-            return envKey;
+        // 1. First check runtime config (from config.js - injected at deployment)
+        if (window.APP_CONFIG?.GEMINI_API_KEY && window.APP_CONFIG.GEMINI_API_KEY.length > 0) {
+            return window.APP_CONFIG.GEMINI_API_KEY;
         }
+        // 2. Then check localStorage (user-entered)
         return localStorage.getItem(API_KEY_STORAGE_KEY);
     }
 
     /**
-     * Check if using embedded API key
+     * Check if using pre-configured API key (from runtime config)
      */
     hasEmbeddedApiKey() {
-        const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-        return envKey && envKey.length > 0 && envKey !== 'YOUR_API_KEY_HERE';
+        return window.APP_CONFIG?.GEMINI_API_KEY && window.APP_CONFIG.GEMINI_API_KEY.length > 0;
     }
 
     /**

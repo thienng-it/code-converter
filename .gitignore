@@ -14,6 +14,9 @@ build/
 .env.local
 .env.*.local
 
+# Runtime config with API keys (DO NOT COMMIT with real keys)
+public/config.js
+
 # Editor directories
 .vscode/
 .idea/
